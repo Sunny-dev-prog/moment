@@ -1,0 +1,16 @@
+$tuangou-corner-radius-ios: 16px;
+$tuangou-corner-radius-android: 14px;
+
+@mixin tuangou-continuous-corners($radius: $tuangou-corner-radius-ios) {
+  border-radius: $radius;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  clip-path: inset(0 round #{$radius});
+}
+
+@mixin tuangou-android-fallback {
+  @include tuangou-continuous-corners($tuangou-corner-radius-android);
+}

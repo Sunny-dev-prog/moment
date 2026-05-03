@@ -1,0 +1,865 @@
+import { useEffect, useRef, useState } from "react";
+import {
+  Home,
+  Menu,
+  MessageCircle,
+  Pause,
+  Play,
+  Plus,
+  RotateCcw,
+  Search,
+  User,
+  Users,
+} from "lucide-react";
+import type { ThemeData } from "@/types/theme";
+import { getThemeTitleColor, getThemeTitleVars, isLightBackground, parseBgColorGradient, parseColorToHsl } from "@/lib/colorUtils";
+import sodaMusicLogo from "@/assets/soda-music-logo.svg";
+import erhaiPhoto from "@/assets/card4/cycling-coast.jpg";
+import { ERHAI_LRC_TEXT } from "@/config/erhaiLines";
+import shanxiDough from "@/assets/card4/shanxi/alpha-noodles/dough.png";
+import shanxiNoodleDaoxiao from "@/assets/card4/shanxi/alpha-noodles/noodle-daoxiao.png";
+import shanxiNoodleGanmian from "@/assets/card4/shanxi/alpha-noodles/noodle-ganmian.png";
+import shanxiNoodleHelao from "@/assets/card4/shanxi/alpha-noodles/noodle-helao.png";
+import shanxiNoodleLamian from "@/assets/card4/shanxi/alpha-noodles/noodle-lamian.png";
+import shanxiNoodleMaoerduo from "@/assets/card4/shanxi/alpha-noodles/noodle-maoerduo.png";
+import shanxiNoodleTijian from "@/assets/card4/shanxi/alpha-noodles/noodle-tijian.png";
+import shanxiSauceBeef from "@/assets/card4/shanxi/sauce-beef.png";
+import shanxiSauceRou from "@/assets/card4/shanxi/sauce-rou.png";
+import shanxiSauceTomato from "@/assets/card4/shanxi/sauce-tomato.png";
+import shanxiToolChopsticks from "@/assets/card4/shanxi/alpha-tools/tool-chopsticks.png";
+import shanxiToolHands from "@/assets/card4/shanxi/alpha-tools/tool-hands.png";
+import shanxiToolKnife from "@/assets/card4/shanxi/alpha-tools/tool-knife.png";
+import shanxiToolPinch from "@/assets/card4/shanxi/alpha-tools/tool-pinch.png";
+import shanxiToolPress from "@/assets/card4/shanxi/alpha-tools/tool-press.png";
+import shanxiToolRollingpin from "@/assets/card4/shanxi/alpha-tools/tool-rollingpin.png";
+import { ErhaiLyrics } from "@/components/ErhaiLyrics";
+import { AltayRouteCard } from "@/components/altay-card4/AltayRouteCard";
+import { ChangbaiCard4Title } from "@/components/changbai-card4/ChangbaiCard4Title";
+import { ShanghaiCard4 } from "@/components/shanghai-card4/ShanghaiCard4";
+import { ShanxiNoodleRenderer } from "@/components/shanxi-card4/ShanxiNoodleRenderer";
+import {
+  type ShanxiNoodleShape,
+  type ShanxiSauceType,
+} from "@/components/shanxi-card4/shanxiRenderConfig";
+import { WuhanLightShowCard } from "@/components/wuhan-card4/WuhanLightShowCard";
+import type { ThemeAudioController } from "@/hooks/useThemeAudio";
+
+interface Props {
+  data: ThemeData;
+  totalCards?: number;
+  themeAudio?: ThemeAudioController;
+}
+
+type ShanxiStep = "pickTool" | "pickSauce" | "done";
+
+const SHANXI_STAGE_TEXT_BY_STEP: Record<ShanxiStep, string> = {
+  pickTool: "选一把工具\n现在开始削面",
+  pickSauce: "煮完面了，赶快浇卤",
+  done: "吃它就完了，香塌脑子",
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function hslToRgb(h: number, s: number, l: number) {
+  const normalizedS = s / 100;
+  const normalizedL = l / 100;
+  const c = (1 - Math.abs(2 * normalizedL - 1)) * normalizedS;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = normalizedL - c / 2;
+
+  let r = 0;
+  let g = 0;
+  let b = 0;
+
+  if (h >= 0 && h < 60) {
+    r = c;
+    g = x;
+  } else if (h < 120) {
+    r = x;
+    g = c;
+  } else if (h < 180) {
+    g = c;
+    b = x;
+  } else if (h < 240) {
+    g = x;
+    b = c;
+  } else if (h < 300) {
+    r = x;
+    b = c;
+  } else {
+    r = c;
+    b = x;
+  }
+
+  return {
+    r: Math.round((r + m) * 255),
+    g: Math.round((g + m) * 255),
+    b: Math.round((b + m) * 255),
+  };
+}
+
+function relativeLuminanceFromHsl(h: number, s: number, l: number) {
+  const rgb = hslToRgb(h, s, l);
+  const convert = (channel: number) => {
+    const value = channel / 255;
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * convert(rgb.r) + 0.7152 * convert(rgb.g) + 0.0722 * convert(rgb.b);
+}
+
+function contrastRatioFromHsl(
+  background: { h: number; s: number; l: number },
+  foreground: { h: number; s: number; l: number },
+) {
+  const bg = relativeLuminanceFromHsl(background.h, background.s, background.l);
+  const fg = relativeLuminanceFromHsl(foreground.h, foreground.s, foreground.l);
+  const lighter = Math.max(bg, fg);
+  const darker = Math.min(bg, fg);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function getShanxiStageTextColor(bgColor: string) {
+  const titleColor = getThemeTitleColor(bgColor);
+  const titleHsl = parseColorToHsl(titleColor);
+  const backgroundSource = bgColor.split(/[;；]/).map((item) => item.trim()).find(Boolean) ?? bgColor;
+  const backgroundHsl = parseColorToHsl(backgroundSource);
+
+  if (!titleHsl || !backgroundHsl) {
+    return titleColor;
+  }
+
+  const lightBackground = isLightBackground(bgColor);
+  const candidate = {
+    ...titleHsl,
+    l: clamp(titleHsl.l + (lightBackground ? -20 : 20), 6, 96),
+  };
+
+  for (let attempt = 0; attempt < 24; attempt += 1) {
+    if (contrastRatioFromHsl(backgroundHsl, candidate) >= 4.5) {
+      return `hsl(${candidate.h.toFixed(0)} ${candidate.s.toFixed(0)}% ${candidate.l.toFixed(0)}%)`;
+    }
+    candidate.l = clamp(candidate.l + (lightBackground ? -2 : 2), 4, 98);
+  }
+
+  return `hsl(${candidate.h.toFixed(0)} ${candidate.s.toFixed(0)}% ${candidate.l.toFixed(0)}%)`;
+}
+
+type ShanxiTool = {
+  id: ShanxiNoodleShape;
+  name: string;
+  toolImg: string;
+  noodleImg: string;
+};
+
+const SHANXI_TOOLS: ShanxiTool[] = [
+  { id: "daoxiao", name: "刀削", toolImg: shanxiToolKnife, noodleImg: shanxiNoodleDaoxiao },
+  { id: "tijian", name: "剔尖", toolImg: shanxiToolChopsticks, noodleImg: shanxiNoodleTijian },
+  { id: "lamian", name: "拉面", toolImg: shanxiToolHands, noodleImg: shanxiNoodleLamian },
+  { id: "ganmian", name: "擀面", toolImg: shanxiToolRollingpin, noodleImg: shanxiNoodleGanmian },
+  { id: "maoer", name: "猫耳朵", toolImg: shanxiToolPinch, noodleImg: shanxiNoodleMaoerduo },
+  { id: "helao", name: "河捞", toolImg: shanxiToolPress, noodleImg: shanxiNoodleHelao },
+];
+
+const SHANXI_SAUCES = [
+  { id: "rou", name: "肉卤", img: shanxiSauceRou },
+  { id: "tomato", name: "西红柿鸡蛋", img: shanxiSauceTomato },
+  { id: "beef", name: "土豆牛肉", img: shanxiSauceBeef },
+] as const satisfies Array<{ id: ShanxiSauceType; name: string; img: string }>;
+
+const SHANXI_CARD_BG = "#2f211e;#4f3428;#724a32";
+
+export function CardFour({ data, totalCards = 4, themeAudio }: Props) {
+  if (data.id === "001") return <WuhanLightShowCard data={data} totalCards={totalCards} />;
+  if (data.id === "002") return <ErhaiCycleCard data={data} totalCards={totalCards} themeAudio={themeAudio} />;
+  if (data.id === "003") return <ShanxiNoodlesCard data={data} totalCards={totalCards} />;
+  if (data.id === "004") return <AltayRouteCard totalCards={totalCards} />;
+  if (data.id === "006") return <ShanghaiCard4 totalCards={totalCards} />;
+  if (data.id === "005") return <ChangbaiPromiseCard data={data} totalCards={totalCards} />;
+  return <UnavailableCard totalCards={totalCards} />;
+}
+
+
+function ErhaiCycleCard({
+  data,
+  totalCards,
+  themeAudio,
+}: {
+  data: ThemeData;
+  totalCards: number;
+  themeAudio?: ThemeAudioController;
+}) {
+  const [fallbackPlaying, setFallbackPlaying] = useState(true);
+  const [fallbackPlaybackMs, setFallbackPlaybackMs] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  const lastFrameRef = useRef<number | null>(null);
+  const titleVars = getThemeTitleVars(data.bgColor || "#96aeb1;#5f777b;#c8aa97");
+
+  const gradient = data.bgColor
+    ? parseBgColorGradient(data.bgColor)
+    : parseBgColorGradient("#E0F0FF;#CFE5FF;#B2D6FF");
+
+  const bgStyle = {
+    ["--bg-eri-gradient" as string]: gradient,
+    ["--erhai-title-gap" as string]: "8px",
+    ["--erhai-disc-gap" as string]: "12px",
+    ["--erhai-title-blend" as string]: "#E0F0FF",
+    background: "var(--bg-eri-gradient)",
+  };
+
+  useEffect(() => {
+    if (themeAudio) {
+      lastFrameRef.current = null;
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      return undefined;
+    }
+
+    if (!fallbackPlaying) {
+      lastFrameRef.current = null;
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+      return undefined;
+    }
+
+    const tick = (timestamp: number) => {
+      if (lastFrameRef.current === null) {
+        lastFrameRef.current = timestamp;
+      }
+
+      const delta = timestamp - lastFrameRef.current;
+      lastFrameRef.current = timestamp;
+      setFallbackPlaybackMs((current) => (current + delta) % totalLoopMs);
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+
+    rafRef.current = window.requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [fallbackPlaying, themeAudio]);
+
+  const totalLoopMs = Math.max(1000, Math.round((themeAudio?.duration || 32) * 1000));
+  const playbackMs = themeAudio ? Math.min(themeAudio.currentTime * 1000, totalLoopMs) : fallbackPlaybackMs;
+  const playing = themeAudio ? themeAudio.isPlaying : fallbackPlaying;
+
+  const circumference = 2 * Math.PI * 144;
+  const currentTime = themeAudio ? themeAudio.currentTime : playbackMs / 1000;
+  const degrees = Math.round((playbackMs / totalLoopMs) * 360);
+  const progress = Math.min(1, degrees / 360);
+  const remaining = Math.max(0, 360 - degrees);
+
+  const handleTogglePlayback = () => {
+    if (themeAudio) {
+      void themeAudio.toggle();
+      return;
+    }
+    setFallbackPlaying((prev) => !prev);
+  };
+
+  return (
+    <div
+      className="relative flex h-full w-full flex-col overflow-hidden text-[#161823]"
+      style={bgStyle}
+    >
+      <style>{`
+        @keyframes erhai-disc-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
+
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_16%,rgba(255,255,255,0.42),transparent_34%),radial-gradient(circle_at_76%_84%,rgba(87,127,174,0.22),transparent_30%),radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.18),transparent_50%)] blur-2xl" />
+
+      <div className="relative flex h-full flex-col px-5 pb-2 pt-2">
+        <TopNav
+          centerLabel="大理"
+          activeColor="var(--card4-title-color)"
+          softColor="var(--card4-title-color)"
+          softOpacity={0.72}
+          style={titleVars as React.CSSProperties}
+        />
+
+        <div
+          className="flex items-center justify-center"
+          style={{ ...titleVars, marginTop: "var(--erhai-title-gap)" } as React.CSSProperties}
+        >
+          <div className="flex items-center gap-2 rounded-full border border-white/35 bg-white/10 px-5 py-2.5 shadow-[0_10px_24px_rgba(76,112,151,0.12)] backdrop-blur-sm">
+            <img src={sodaMusicLogo} alt="汽水音乐" className="h-6 w-6 rounded-md" />
+            <span className="theme-shared-card-title font-black leading-none tracking-[0.01em]">
+              汽水音乐陪你
+              <span>周游洱海</span>
+            </span>
+          </div>
+        </div>
+
+        <section className="flex items-center justify-center" style={{ marginTop: "var(--erhai-disc-gap)" }}>
+          <div className="relative flex aspect-square w-[94%] max-w-[360px] items-center justify-center rounded-full">
+            <svg viewBox="0 0 340 340" className="absolute inset-0 h-full w-full -rotate-90">
+              <circle cx="170" cy="170" r="144" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="8" />
+              <circle
+                cx="170"
+                cy="170"
+                r="144"
+                fill="none"
+                stroke="#FE2C55"
+                strokeWidth="10"
+                strokeLinecap="round"
+                strokeDasharray={`${circumference * progress} ${circumference}`}
+              />
+            </svg>
+
+            <div className="absolute inset-[7%] rounded-full bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.7),rgba(239,242,247,0.98)_35%,rgba(204,209,217,0.98)_60%,rgba(174,181,192,0.95)_76%,rgba(134,141,154,0.95)_100%)] shadow-[inset_0_2px_4px_rgba(255,255,255,0.75),0_18px_30px_rgba(0,0,0,0.12)]" />
+
+            <div
+              className="absolute inset-[12%] overflow-hidden rounded-full border border-white/35 shadow-[0_12px_24px_rgba(22,24,35,0.12)]"
+              style={{
+                animation: "erhai-disc-spin 20s linear infinite",
+                animationPlayState: playing ? "running" : "paused",
+              }}
+            >
+              <img src={erhaiPhoto} alt="洱海风景" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.28),transparent_34%),linear-gradient(180deg,rgba(8,23,38,0.04)_0%,rgba(8,23,38,0.18)_60%,rgba(8,23,38,0.42)_100%)]" />
+              <div className="absolute inset-[6%] rounded-full border border-white/30" />
+              <div className="absolute inset-x-0 top-0 h-[32%] bg-[linear-gradient(180deg,rgba(255,255,255,0.18),transparent)]" />
+            </div>
+
+            <button
+              type="button"
+              aria-label={playing ? "暂停播放" : "开始播放"}
+              onClick={handleTogglePlayback}
+              className={`absolute left-1/2 top-1/2 z-10 flex h-[64px] w-[64px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 shadow-[0_10px_24px_rgba(10,20,32,0.18)] transition-all duration-200 focus:outline-none ${
+                playing
+                  ? "bg-white/92 text-[#161823]"
+                  : "bg-[#161823]/78 text-white backdrop-blur-sm"
+              }`}
+            >
+              {playing ? <Pause className="h-6 w-6 fill-current" /> : <Play className="ml-1 h-6 w-6 fill-current" />}
+            </button>
+          </div>
+        </section>
+
+        <section className="mt-0">
+          <ErhaiLyrics
+            source={ERHAI_LRC_TEXT}
+            currentTime={currentTime}
+          />
+        </section>
+
+        <div className="mt-auto" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2px)" }}>
+          <div className="mb-2 px-1 py-3" style={titleVars as React.CSSProperties}>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <div className="text-[13px] font-semibold tracking-[0.08em]" style={{ color: "var(--card4-title-color)", opacity: 0.82 }}>实时变化</div>
+                <div className="mt-1.5 text-[14px] leading-[1.45] text-[#161823]/66">
+                  已环行 {Math.round(progress * 100)}%，剩余 {remaining}°。
+                </div>
+              </div>
+              <div className="flex shrink-0 items-end gap-1.5">
+                <span className="text-[30px] font-bold leading-none" style={{ color: "var(--card4-title-color)" }}>{degrees}</span>
+                <span className="pb-1 text-[14px]" style={{ color: "var(--card4-title-color)", opacity: 0.64 }}>/ 360°</span>
+              </div>
+            </div>
+          </div>
+          <PageDots total={totalCards} active={3} activeClass="bg-[#5d3147]" inactiveClass="bg-[#5d3147]/25" className="mt-2.5" />
+          <BottomNav
+            activeColor="var(--card4-title-color)"
+            mutedColor="var(--card4-title-color)"
+            mutedOpacity={0.58}
+            borderColor="var(--card4-title-color)"
+            dividerColor="var(--card4-title-color)"
+            style={titleVars as React.CSSProperties}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShanxiNoodlesCard({ data, totalCards }: { data: ThemeData; totalCards: number }) {
+  const [step, setStep] = useState<ShanxiStep>("pickTool");
+  const [toolId, setToolId] = useState<ShanxiNoodleShape | null>(null);
+  const [sauceId, setSauceId] = useState<ShanxiSauceType | null>(null);
+  const [renderNonce, setRenderNonce] = useState(0);
+  const [stageText, setStageText] = useState(SHANXI_STAGE_TEXT_BY_STEP.pickTool);
+  const [stageTextVisible, setStageTextVisible] = useState(true);
+  const previousStepRef = useRef<ShanxiStep>("pickTool");
+  const resolvedBgColor = data.bgColor || "#96704f;#614735;#211814";
+  const titleVars = getThemeTitleVars(resolvedBgColor);
+  const bgStyle = { background: parseBgColorGradient(resolvedBgColor) };
+  const stageTextColor = getShanxiStageTextColor(resolvedBgColor);
+
+  const tool = SHANXI_TOOLS.find((item) => item.id === toolId) ?? null;
+  const sauce = SHANXI_SAUCES.find((item) => item.id === sauceId) ?? null;
+
+  useEffect(() => {
+    if (previousStepRef.current === step) return;
+    setStageTextVisible(false);
+    const timeoutId = window.setTimeout(() => {
+      setStageText(SHANXI_STAGE_TEXT_BY_STEP[step]);
+      requestAnimationFrame(() => setStageTextVisible(true));
+    }, 150);
+    previousStepRef.current = step;
+    return () => window.clearTimeout(timeoutId);
+  }, [step]);
+
+  const reset = () => {
+    setStep("pickTool");
+    setToolId(null);
+    setSauceId(null);
+    setRenderNonce((current) => current + 1);
+  };
+
+  const handleTool = (id: ShanxiNoodleShape) => {
+    if (step !== "pickTool" || toolId) return;
+    setToolId(id);
+    setRenderNonce((current) => current + 1);
+    window.setTimeout(() => setStep("pickSauce"), 350);
+  };
+
+  const handleSauce = (id: ShanxiSauceType) => {
+    if (step !== "pickSauce" || sauceId) return;
+    setSauceId(id);
+    setRenderNonce((current) => current + 1);
+    window.setTimeout(() => setStep("done"), 700);
+  };
+
+  return (
+    <div className="relative flex h-full w-full flex-col overflow-hidden text-amber-50" style={bgStyle}>
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.18), transparent 60%), radial-gradient(120% 60% at 50% 100%, rgba(0,0,0,0.25), transparent 60%)",
+          backdropFilter: "blur(2px)",
+        }}
+      />
+
+      <div className="relative flex h-full flex-col px-4 pb-2 pt-2">
+        <TopNav centerLabel="山西" />
+
+        <div
+          className="mt-3 rounded-[28px] border border-amber-100/15 bg-black/14 px-4 py-3 shadow-[0_24px_44px_-24px_rgba(0,0,0,0.5)] backdrop-blur-sm"
+          style={titleVars as React.CSSProperties}
+        >
+          <div className="theme-shared-card-title font-black leading-[1.12]">
+            世界面食看中国
+            <br />
+            <span style={{ color: "var(--card4-title-color)" }}>中国面食看山西</span>
+          </div>
+          <div
+            className="mt-2 text-[15px] font-semibold leading-[1.3]"
+            style={{ color: "var(--card4-title-color)", opacity: 0.86 }}
+          >
+            这一口面，山西人说了算。
+          </div>
+        </div>
+
+        <div className="relative mt-3 flex h-[282px] items-start justify-center">
+          <div
+            id="stage-text"
+            aria-live="polite"
+            className={`pointer-events-none absolute z-30 whitespace-pre-line font-black tracking-[0.01em] text-shadow-soft transition-opacity duration-300 ${
+              stageTextVisible ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              top: "-4px",
+              left: "max(0px, calc(50% - 168px))",
+              width: "min(268px, calc(100% - 8px))",
+              fontFamily: "inherit",
+              fontSize: "calc(var(--card4-title-font-size, 25px) * 0.75)",
+              lineHeight: 1.2,
+              color: stageTextColor,
+            }}
+          >
+            {stageText}
+          </div>
+
+          {step === "pickTool" ? (
+            <div className="relative aspect-square w-full max-w-[280px]">
+              <div className="absolute inset-3 rounded-full border border-amber-200/20" />
+              <div className="absolute inset-10 rounded-full border border-dashed border-amber-200/12" />
+
+              {SHANXI_TOOLS.map((item, index) => {
+                const angle = (index / SHANXI_TOOLS.length) * Math.PI * 2 - Math.PI / 2;
+                const radius = 42;
+                const left = 50 + radius * Math.cos(angle);
+                const top = 50 + radius * Math.sin(angle);
+                const isPicked = toolId === item.id;
+                const isFaded = toolId !== null && !isPicked;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleTool(item.id)}
+                    disabled={toolId !== null}
+                    className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-300 ${
+                      isFaded ? "scale-75 opacity-0" : ""
+                    } ${isPicked ? "z-20 scale-125" : ""}`}
+                    style={{ left: `${left}%`, top: `${top}%` }}
+                    aria-label={item.name}
+                  >
+                    <div
+                      className={`flex h-[54px] w-[54px] items-center justify-center rounded-full bg-gradient-to-br from-amber-950/85 to-stone-900/85 ring-1 backdrop-blur-sm ${
+                        isPicked ? "ring-amber-300" : "ring-amber-200/25"
+                      }`}
+                    >
+                      <img
+                        src={item.toolImg}
+                        alt={item.name}
+                        width={44}
+                        height={44}
+                        loading="lazy"
+                        className="h-9 w-9 object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]"
+                      />
+                    </div>
+                    <span className="mt-1 text-[11px] font-medium text-amber-50/90">
+                      {item.name}
+                    </span>
+                  </button>
+                );
+              })}
+
+              <div className="absolute left-1/2 top-1/2 flex h-[110px] w-[110px] -translate-x-1/2 -translate-y-1/2 items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-amber-300/15 blur-2xl" />
+                <img
+                  src={shanxiDough}
+                  alt="面团"
+                  width={110}
+                  height={110}
+                  className="relative h-full w-full object-contain animate-[pulse_2.8s_ease-in-out_infinite]"
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {step === "pickSauce" && tool ? (
+            <div className="relative flex h-[244px] w-[244px] items-center justify-center">
+              {sauce ? (
+                <ShanxiNoodleRenderer
+                  noodleImage={tool.noodleImg}
+                  noodleShape={tool.id}
+                  sauceType={sauce.id}
+                  seedKey={`${tool.id}:${sauce.id}:${renderNonce}`}
+                  size={236}
+                />
+              ) : (
+                <>
+                  <div className="absolute inset-0 rounded-full bg-amber-300/10 blur-2xl" />
+                  <img
+                    key={tool.id}
+                    src={tool.noodleImg}
+                    alt={tool.name}
+                    width={220}
+                    height={220}
+                    className="relative h-full w-full object-contain drop-shadow-[0_10px_25px_rgba(0,0,0,0.4)]"
+                  />
+                  <span className="absolute bottom-4 rounded-full bg-amber-400/95 px-3 py-1 text-[11px] font-semibold text-stone-900 shadow-lg">
+                    选择卤子后自动匹配附着路径
+                  </span>
+                </>
+              )}
+            </div>
+          ) : null}
+
+          {step === "done" && tool && sauce ? (
+            <ShanxiNoodleRenderer
+              noodleImage={tool.noodleImg}
+              noodleShape={tool.id}
+              sauceType={sauce.id}
+              seedKey={`${tool.id}:${sauce.id}:${renderNonce}`}
+              size={252}
+            />
+          ) : null}
+        </div>
+
+        <div className="mt-2 rounded-3xl border border-amber-100/15 bg-black/20 p-3 backdrop-blur-md">
+          {step !== "done" ? (
+            <>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-[10px] font-semibold tracking-[0.28em] text-amber-200/75">SAUCE · 卤子</span>
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-amber-100/70"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  重来
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {SHANXI_SAUCES.map((item) => {
+                  const isPicked = sauceId === item.id;
+                  const disabled = step !== "pickSauce" || sauceId !== null;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSauce(item.id)}
+                      disabled={disabled}
+                      className={`flex flex-col items-center rounded-xl bg-black/30 p-2 ring-1 transition-all ${
+                        isPicked ? "scale-105 ring-amber-300/80" : "ring-white/10 hover:ring-amber-200/40"
+                      } ${disabled && !isPicked ? "opacity-40" : ""}`}
+                    >
+                      <img
+                        src={item.img}
+                        alt={item.name}
+                        width={56}
+                        height={56}
+                        loading="lazy"
+                        className="h-12 w-12 object-contain drop-shadow"
+                      />
+                      <span className="mt-1 text-[11px] text-amber-50/90">{item.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="text-center">
+              <div className="text-[16px] font-bold text-amber-50">这一碗，才是山西人的江湖</div>
+              <div className="mt-1 text-[11px] text-amber-100/70">
+                {tool?.name} · 配 {sauce?.name}
+              </div>
+              <button
+                type="button"
+                onClick={reset}
+                className="mt-3 inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1.5 text-[11px] font-semibold text-stone-900"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                再来一碗
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 grid grid-cols-[1fr_1.25fr] gap-3">
+          <button className="h-11 rounded-full border border-white/10 bg-white/10 text-[14px] font-semibold text-amber-50/90 backdrop-blur">
+            不感兴趣
+          </button>
+          <button className="h-11 rounded-full bg-amber-50 text-[14px] font-bold text-stone-900 shadow-lg">
+            查看详情
+          </button>
+        </div>
+
+        <div className="mt-auto">
+          <PageDots total={totalCards} active={3} activeClass="bg-amber-400" inactiveClass="bg-amber-100/30" className="mt-3" />
+          <BottomNav />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChangbaiPromiseCard({ data, totalCards }: { data: ThemeData; totalCards: number }) {
+  const resolvedBgColor = data.bgColor || "#d6ecf5;#c3d9e7;#94abc0";
+  const lightBg = isLightBackground(resolvedBgColor);
+  const titleColor = getThemeTitleColor(resolvedBgColor);
+  const titleVars = getThemeTitleVars(resolvedBgColor);
+  const bgStyle = { background: parseBgColorGradient(resolvedBgColor) };
+  const passiveColor = lightBg ? "#5d7283" : "rgba(255,255,255,0.76)";
+  const dividerColor = lightBg ? "#6f8798" : "rgba(255,255,255,0.22)";
+  const borderColor = lightBg ? "#5d7283" : "rgba(255,255,255,0.82)";
+
+  return (
+    <div className="relative flex h-full w-full flex-col overflow-hidden" style={bgStyle}>
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(120% 60% at 50% 0%, rgba(255,255,255,0.18), transparent 60%), radial-gradient(120% 60% at 50% 100%, rgba(0,0,0,0.25), transparent 60%)",
+          backdropFilter: "blur(2px)",
+        }}
+      />
+
+      <div className="relative flex h-full flex-col px-4 pb-2 pt-3">
+        <TopNav
+          centerLabel="长白山"
+          darkText={lightBg}
+          activeColor={titleColor}
+          softColor={passiveColor}
+          softOpacity={lightBg ? 0.88 : 0.8}
+          style={titleVars as React.CSSProperties}
+        />
+
+        <section className="mt-3" style={titleVars as React.CSSProperties}>
+          <div className="max-w-[258px]">
+            <ChangbaiCard4Title />
+          </div>
+        </section>
+
+        <div className="pointer-events-none relative mt-4 flex-1 overflow-hidden rounded-[30px] border border-white/35 bg-white/18 shadow-[0_24px_54px_-32px_rgba(85,112,131,0.45)] backdrop-blur-sm">
+          <div className="absolute inset-x-0 top-0 h-[42%] bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.78),transparent_66%)]" />
+          <div className="absolute left-[12%] top-[18%] h-24 w-24 rounded-full bg-white/35 blur-2xl" />
+          <div className="absolute bottom-[16%] right-[10%] h-28 w-28 rounded-full bg-[#6f8798]/18 blur-3xl" />
+          <div className="absolute inset-x-6 bottom-8 rounded-[26px] border border-white/45 bg-white/38 px-4 py-3 backdrop-blur-md">
+            <div className="text-[13px] leading-[1.6] text-[#5d7283]">
+              主题 5 卡片 4 标题已沿用共享标题令牌，保持两行固定排版与卡片 4 视觉节奏一致。
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3">
+          <PageDots total={totalCards} active={3} activeClass="bg-[#557083]" inactiveClass="bg-[#557083]/22" />
+        </div>
+
+        <BottomNav
+          dark={lightBg}
+          activeColor={titleColor}
+          mutedColor={passiveColor}
+          mutedOpacity={lightBg ? 0.78 : 0.65}
+          borderColor={borderColor}
+          dividerColor={dividerColor}
+          style={titleVars as React.CSSProperties}
+        />
+      </div>
+    </div>
+  );
+}
+
+function UnavailableCard({ totalCards }: { totalCards: number }) {
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-950 text-white">
+      <div className="rounded-3xl border border-white/15 bg-white/5 px-6 py-8 text-center backdrop-blur">
+        <div className="text-lg font-bold">该主题暂未接入卡片 4</div>
+        <div className="mt-2 text-sm text-white/65">当前只为 001、002、003、004、005、006 增加了第四张卡片。</div>
+      </div>
+      <PageDots total={totalCards} active={Math.max(0, totalCards - 1)} activeClass="bg-white" inactiveClass="bg-white/25" className="mt-5" />
+    </div>
+  );
+}
+
+function TopNav({
+  centerLabel,
+  darkText,
+  activeColor,
+  softColor,
+  softOpacity,
+  style,
+}: {
+  centerLabel: string;
+  darkText?: boolean;
+  activeColor?: string;
+  softColor?: string;
+  softOpacity?: number;
+  style?: React.CSSProperties;
+}) {
+  const textClass = darkText ? "text-[#5d3147]" : "text-white";
+  const softClass = darkText ? "text-[#6f4760]/85" : "text-white/80";
+  const activeStyle = activeColor ? { color: activeColor } : undefined;
+  const resolvedSoftOpacity = softOpacity ?? 0.8;
+  const softStyle = softColor ? { color: softColor, opacity: resolvedSoftOpacity } : undefined;
+
+  return (
+    <nav className="flex items-center justify-between text-[13px]" style={style}>
+      <Menu className={`h-5 w-5 ${activeColor ? "" : textClass}`} style={activeStyle} strokeWidth={2} />
+      <div className={`flex items-center gap-3 ${softColor ? "" : softClass}`} style={softStyle}>
+        <span>团购</span>
+        <span>经验</span>
+        <span style={activeStyle}>{centerLabel}</span>
+        <span>关注</span>
+        <span>商城</span>
+        <span className={`font-bold ${activeColor ? "" : textClass}`} style={activeStyle}>推荐</span>
+      </div>
+      <Search className={`h-5 w-5 ${activeColor ? "" : textClass}`} style={activeStyle} strokeWidth={2} />
+    </nav>
+  );
+}
+
+function BottomNav({
+  dark,
+  activeColor,
+  mutedColor,
+  mutedOpacity,
+  borderColor,
+  dividerColor,
+  style,
+}: {
+  dark?: boolean;
+  activeColor?: string;
+  mutedColor?: string;
+  mutedOpacity?: number;
+  borderColor?: string;
+  dividerColor?: string;
+  style?: React.CSSProperties;
+}) {
+  const active = dark ? "text-[#5d3147]" : "text-white";
+  const muted = dark ? "text-[#846779]" : "text-white/65";
+  const border = dark ? "border-[#6e4b61]" : "border-white";
+  const activeStyle = activeColor ? { color: activeColor } : undefined;
+  const passiveStyle = mutedColor ? { color: mutedColor, opacity: mutedOpacity ?? 0.65 } : undefined;
+  const dividerStyle = dividerColor ? { borderColor: dividerColor, opacity: 0.18 } : undefined;
+  const buttonStyle = borderColor
+    ? { borderColor, color: activeColor ?? borderColor }
+    : undefined;
+
+  return (
+    <nav className={`mt-2 flex items-end justify-between border-t ${dividerColor ? "" : dark ? "border-[#6e4b61]/20" : "border-white/15"} pt-2`} style={{ ...style, ...dividerStyle }}>
+      <TabItem icon={<Home className="h-4 w-4" />} label="首页" className={activeColor ? "" : active} style={activeStyle} />
+      <TabItem icon={<Users className="h-4 w-4" />} label="朋友" className={mutedColor ? "" : muted} style={passiveStyle} />
+      <button className={`-mt-2 flex h-9 w-9 items-center justify-center rounded-md border-2 ${borderColor ? "" : border} ${activeColor ? "" : active}`} style={buttonStyle}>
+        <Plus className="h-4 w-4" strokeWidth={2.5} />
+      </button>
+      <TabItem icon={<MessageCircle className="h-4 w-4" />} label="消息" className={mutedColor ? "" : muted} style={passiveStyle} />
+      <TabItem icon={<User className="h-4 w-4" />} label="我" className={mutedColor ? "" : muted} style={passiveStyle} />
+    </nav>
+  );
+}
+
+function TabItem({
+  icon,
+  label,
+  className,
+  style,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  className: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div className={`flex w-12 flex-col items-center gap-0.5 ${className}`} style={style}>
+      {icon}
+      <span className="text-[10px]">{label}</span>
+    </div>
+  );
+}
+
+function PageDots({
+  total,
+  active,
+  activeClass,
+  inactiveClass,
+  className,
+}: {
+  total: number;
+  active: number;
+  activeClass: string;
+  inactiveClass: string;
+  className?: string;
+}) {
+  return (
+    <div className={`flex items-center justify-center gap-1.5 ${className ?? ""}`}>
+      {Array.from({ length: total }).map((_, index) => (
+        <span
+          key={index}
+          className={`h-[3px] rounded-full transition-all ${index === active ? `w-8 ${activeClass}` : `w-5 ${inactiveClass}`}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function formatPlaybackTime(durationMs: number) {
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = String(totalSeconds % 60).padStart(2, "0");
+  return `${mins}:${secs}`;
+}

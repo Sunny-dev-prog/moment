@@ -1,0 +1,113 @@
+{
+  "sauces": {
+    "rou": {
+      "label": "肉卤",
+      "viscosity": 0.82,
+      "density": 0.78,
+      "gloss": 0.36,
+      "saturation": 0.62,
+      "palette": {
+        "base": "#7b3e22",
+        "shadow": "#3c1b10",
+        "highlight": "#b86a42",
+        "oil": "#cf8c4c"
+      }
+    },
+    "tomato": {
+      "label": "番茄鸡蛋",
+      "viscosity": 0.58,
+      "density": 0.46,
+      "gloss": 0.63,
+      "saturation": 0.88,
+      "palette": {
+        "base": "#cc3e28",
+        "shadow": "#7f1812",
+        "highlight": "#ff9f5d",
+        "oil": "#ffd066"
+      }
+    },
+    "beef": {
+      "label": "土豆牛肉",
+      "viscosity": 0.74,
+      "density": 0.84,
+      "gloss": 0.42,
+      "saturation": 0.54,
+      "palette": {
+        "base": "#6d3d28",
+        "shadow": "#342014",
+        "highlight": "#a56a49",
+        "oil": "#d49b52"
+      }
+    }
+  },
+  "noodles": {
+    "daoxiao": {
+      "label": "刀削面",
+      "absorbency": 0.66,
+      "reflectance": 0.42,
+      "textureStrength": 0.78,
+      "strandDensity": 0.54,
+      "attachmentBias": 0.74
+    },
+    "tijian": {
+      "label": "剔尖",
+      "absorbency": 0.62,
+      "reflectance": 0.4,
+      "textureStrength": 0.72,
+      "strandDensity": 0.58,
+      "attachmentBias": 0.68
+    },
+    "lamian": {
+      "label": "拉面",
+      "absorbency": 0.56,
+      "reflectance": 0.55,
+      "textureStrength": 0.46,
+      "strandDensity": 0.84,
+      "attachmentBias": 0.6
+    },
+    "ganmian": {
+      "label": "擀面",
+      "absorbency": 0.69,
+      "reflectance": 0.38,
+      "textureStrength": 0.8,
+      "strandDensity": 0.52,
+      "attachmentBias": 0.76
+    },
+    "maoer": {
+      "label": "猫耳朵",
+      "absorbency": 0.73,
+      "reflectance": 0.34,
+      "textureStrength": 0.88,
+      "strandDensity": 0.44,
+      "attachmentBias": 0.82
+    },
+    "helao": {
+      "label": "河捞面",
+      "absorbency": 0.64,
+      "reflectance": 0.48,
+      "textureStrength": 0.69,
+      "strandDensity": 0.63,
+      "attachmentBias": 0.71
+    }
+  },
+  "rules": {
+    "rou:daoxiao": { "attachmentArea": 0.78, "flowPath": 0.46, "spreadX": 0.74, "spreadY": 0.48, "pooling": 0.62, "glossBoost": 0.08, "contrastBoost": 0.16 },
+    "rou:tijian": { "attachmentArea": 0.73, "flowPath": 0.51, "spreadX": 0.71, "spreadY": 0.53, "pooling": 0.58, "glossBoost": 0.09, "contrastBoost": 0.15 },
+    "rou:lamian": { "attachmentArea": 0.61, "flowPath": 0.68, "spreadX": 0.62, "spreadY": 0.66, "pooling": 0.38, "glossBoost": 0.11, "contrastBoost": 0.12 },
+    "rou:ganmian": { "attachmentArea": 0.8, "flowPath": 0.44, "spreadX": 0.76, "spreadY": 0.46, "pooling": 0.65, "glossBoost": 0.07, "contrastBoost": 0.18 },
+    "rou:maoer": { "attachmentArea": 0.84, "flowPath": 0.33, "spreadX": 0.58, "spreadY": 0.42, "pooling": 0.72, "glossBoost": 0.05, "contrastBoost": 0.2 },
+    "rou:helao": { "attachmentArea": 0.76, "flowPath": 0.47, "spreadX": 0.68, "spreadY": 0.52, "pooling": 0.6, "glossBoost": 0.08, "contrastBoost": 0.17 },
+    "tomato:daoxiao": { "attachmentArea": 0.66, "flowPath": 0.61, "spreadX": 0.7, "spreadY": 0.63, "pooling": 0.42, "glossBoost": 0.18, "contrastBoost": 0.1 },
+    "tomato:tijian": { "attachmentArea": 0.63, "flowPath": 0.66, "spreadX": 0.68, "spreadY": 0.65, "pooling": 0.39, "glossBoost": 0.19, "contrastBoost": 0.09 },
+    "tomato:lamian": { "attachmentArea": 0.55, "flowPath": 0.8, "spreadX": 0.58, "spreadY": 0.74, "pooling": 0.24, "glossBoost": 0.22, "contrastBoost": 0.07 },
+    "tomato:ganmian": { "attachmentArea": 0.69, "flowPath": 0.58, "spreadX": 0.73, "spreadY": 0.59, "pooling": 0.45, "glossBoost": 0.17, "contrastBoost": 0.11 },
+    "tomato:maoer": { "attachmentArea": 0.71, "flowPath": 0.48, "spreadX": 0.54, "spreadY": 0.47, "pooling": 0.51, "glossBoost": 0.15, "contrastBoost": 0.12 },
+    "tomato:helao": { "attachmentArea": 0.68, "flowPath": 0.57, "spreadX": 0.65, "spreadY": 0.61, "pooling": 0.44, "glossBoost": 0.18, "contrastBoost": 0.1 },
+    "beef:daoxiao": { "attachmentArea": 0.74, "flowPath": 0.49, "spreadX": 0.72, "spreadY": 0.5, "pooling": 0.63, "glossBoost": 0.1, "contrastBoost": 0.14 },
+    "beef:tijian": { "attachmentArea": 0.7, "flowPath": 0.54, "spreadX": 0.69, "spreadY": 0.56, "pooling": 0.57, "glossBoost": 0.11, "contrastBoost": 0.13 },
+    "beef:lamian": { "attachmentArea": 0.58, "flowPath": 0.73, "spreadX": 0.61, "spreadY": 0.69, "pooling": 0.33, "glossBoost": 0.14, "contrastBoost": 0.1 },
+    "beef:ganmian": { "attachmentArea": 0.77, "flowPath": 0.45, "spreadX": 0.74, "spreadY": 0.48, "pooling": 0.66, "glossBoost": 0.09, "contrastBoost": 0.16 },
+    "beef:maoer": { "attachmentArea": 0.82, "flowPath": 0.36, "spreadX": 0.57, "spreadY": 0.44, "pooling": 0.74, "glossBoost": 0.07, "contrastBoost": 0.18 },
+    "beef:helao": { "attachmentArea": 0.73, "flowPath": 0.5, "spreadX": 0.66, "spreadY": 0.54, "pooling": 0.59, "glossBoost": 0.1, "contrastBoost": 0.15 }
+  }
+}

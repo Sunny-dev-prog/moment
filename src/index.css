@@ -1,0 +1,339 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ---- Theme card design tokens ---- */
+@layer utilities {
+  .theme-shared-card-title {
+    font-size: var(--card4-title-font-size, 25px);
+    color: var(--card4-title-color, #b08f9f);
+    letter-spacing: 0;
+    line-height: 1.24;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .glass-card {
+    background: hsl(0 0% 100% / 0.08);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid hsl(0 0% 100% / 0.14);
+  }
+  .glass-card-deep {
+    background: hsl(0 0% 0% / 0.18);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid hsl(0 0% 100% / 0.1);
+  }
+}
+
+/* ---- Button interactive animations ---- */
+@keyframes theme-btn-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(93,49,71,0.45); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(93,49,71,0); }
+}
+@keyframes erhai-scroll-up {
+  0% { transform: translateY(100%); opacity: 0; }
+  8% { transform: translateY(0); opacity: 1; }
+  88% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+.erhai-scroll-up {
+  animation: erhai-scroll-up 6s ease-in-out;
+}
+.text-shadow-soft {
+  text-shadow: 0 2px 12px hsl(0 0% 0% / 0.35);
+}
+.truncate-1 {
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+/* ---- Card3 滚动动画 ---- */
+@keyframes c3-scroll-up {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+@keyframes c3-scroll-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes c3-scroll-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.anim-c3-up    { animation: c3-scroll-up    16s linear infinite; }
+.anim-c3-left  { animation: c3-scroll-left  26s linear infinite; }
+.anim-c3-right { animation: c3-scroll-right 10s linear infinite; }
+
+/* ============ Card 4 · 上海外滩·万国建筑 ============ */
+.card4-root {
+  background-color: #0b1220;
+  color: #f5e9c8;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+}
+
+.card4-bg {
+  background:
+    radial-gradient(ellipse at 50% 18%, rgba(200, 162, 74, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(8, 14, 28, 0.95) 0%, transparent 60%),
+    linear-gradient(180deg, #14202e 0%, #0e1624 55%, #0a111d 100%);
+}
+
+.card4-noise {
+  background-image:
+    radial-gradient(rgba(230, 199, 122, 0.05) 1px, transparent 1px),
+    radial-gradient(rgba(200, 162, 74, 0.04) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 1px;
+  mix-blend-mode: screen;
+  opacity: 0.45;
+}
+
+.card4-skyline {
+  filter: drop-shadow(0 0 10px rgba(200, 162, 74, 0.25));
+  -webkit-mask-image: linear-gradient(180deg, #000 65%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 65%, transparent 100%);
+}
+
+.card4-glow {
+  background:
+    radial-gradient(ellipse at 50% 25%, rgba(230, 199, 122, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 30% 12%, rgba(200, 162, 74, 0.08) 0%, transparent 55%);
+  animation: card4-glow-float 9s ease-in-out infinite;
+  filter: blur(2px);
+}
+
+@keyframes card4-glow-float {
+  0%, 100% { opacity: 0.7; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-6px); }
+}
+
+.card4-pill {
+  background: linear-gradient(135deg, #c8a24a, #8a6a2a);
+  color: #fffbe8;
+  border-radius: 9999px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(200, 162, 74, 0.3);
+}
+
+.card4-title {
+  font-weight: 800;
+  color: var(--card4-title-color, #fffbe8);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55), 0 0 22px rgba(200, 162, 74, 0.18);
+  letter-spacing: 0.02em;
+  font-family: "Songti SC", "Source Han Serif", "Noto Serif SC", serif;
+}
+
+.card4-title-accent {
+  color: var(--card4-title-color, #fffbe8);
+}
+
+.card4-spine {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(200, 162, 74, 0.55) 12%,
+    rgba(230, 199, 122, 0.85) 50%,
+    rgba(200, 162, 74, 0.55) 88%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(230, 199, 122, 0.5);
+}
+
+.card4-dot {
+  background: #e6c77a;
+  box-shadow: 0 0 0 3px rgba(11, 18, 32, 0.95), 0 0 12px rgba(230, 199, 122, 0.7);
+}
+
+.card4-dot-pulse {
+  animation: card4-dot-pulse 1.8s ease-in-out infinite;
+}
+
+.card4-dot-seen {
+  background: #fffbe8;
+}
+
+@keyframes card4-dot-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.35); }
+}
+
+.card4-node {
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.card4-node:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 18px rgba(200, 162, 74, 0.25);
+}
+
+.card4-year-pill {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(200, 162, 74, 0.85), rgba(138, 106, 42, 0.85));
+  color: #14202e;
+  letter-spacing: 0.05em;
+  margin: 1px 2px;
+}
+
+.card4-pulse-dot {
+  animation: card4-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes card4-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(230, 199, 122, 0.55); }
+  50% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(230, 199, 122, 0); }
+}
+
+.card4-hero-frame {
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(230, 199, 122, 0.35),
+    0 12px 40px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 251, 232, 0.05);
+}
+
+.card4-hero-frame::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(230, 199, 122, 0.22);
+  border-radius: 14px;
+  pointer-events: none;
+}
+
+.card4-hero-img {
+  animation: card4-hero-in 0.5s ease-out both;
+}
+
+@keyframes card4-hero-in {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.card4-fade {
+  animation: card4-fade 0.45s ease-out both;
+}
+
+@keyframes card4-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card4-rise {
+  animation: card4-rise 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes card4-rise {
+  0% { transform: translateY(20px) scale(0.92); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}

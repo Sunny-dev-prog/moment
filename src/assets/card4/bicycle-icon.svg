@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  <!-- 后轮 -->
+  <circle cx="6" cy="16" r="3.5"/>
+  <!-- 前轮 -->
+  <circle cx="18" cy="16" r="3.5"/>
+  <!-- 车架 -->
+  <path d="M6 16l3-7h3l2 4h4"/>
+  <!-- 横梁 -->
+  <path d="M9 9l5 0"/>
+  <!-- 车座 -->
+  <path d="M7.5 9h3"/>
+  <!-- 车把 -->
+  <path d="M18 13l1-3"/>
+  <!-- 脚蹬 -->
+  <circle cx="12" cy="16" r="0.8" fill="currentColor"/>
+</svg>

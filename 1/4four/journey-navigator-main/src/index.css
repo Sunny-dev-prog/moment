@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   卡片系列 · 北疆自驾 · 设计系统
+   所有颜色 HSL，与卡片1 深绿渐变体系完全对齐
+   ============================================ */
+
+@layer base {
+  :root {
+    /* 外壳米色（手机壳留白） */
+    --shell: 42 33% 98%;
+    --foreground: 222.2 84% 4.9%;
+
+    /* 卡片深绿渐变（与卡片1完全一致） */
+    --card-bg-from: 95 12% 65%;   /* 顶部雾绿 */
+    --card-bg-via:  100 14% 38%;  /* 中部森林绿 */
+    --card-bg-to:   105 22% 18%;  /* 底部深绿 */
+
+    /* 卡片4 个性化：青蓝雾气光晕 */
+    --card-mist: 180 45% 70%;
+
+    /* 玻璃拟态 */
+    --glass: 0 0% 100%;
+    --glass-border: 0 0% 100%;
+
+    /* 路线 + 路况 */
+    --road-stroke: 165 65% 65%;     /* 青绿色发光路径 */
+    --road-glow:   170 80% 75%;
+    --diff-low:    140 60% 55%;     /* 🟢 低难 */
+    --diff-mid:    42 95% 60%;      /* 🟡 中难 */
+    --diff-high:   8 80% 60%;       /* 🔴 高难 */
+
+    /* 地形等高线 */
+    --terrain-line: 0 0% 100%;
+
+    /* shadcn 默认（保留） */
+    --background: 0 0% 100%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+      "Microsoft YaHei", "微软雅黑", sans-serif;
+  }
+}
+
+/* ============================================
+   卡片系列工具类
+   ============================================ */
+@layer utilities {
+  .font-mono-num {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  .card-bg {
+    background:
+      radial-gradient(120% 80% at 50% 0%, hsl(var(--card-mist) / 0.18) 0%, transparent 55%),
+      linear-gradient(
+        180deg,
+        hsl(var(--card-bg-from)) 0%,
+        hsl(var(--card-bg-via)) 45%,
+        hsl(var(--card-bg-to)) 100%
+      );
+  }
+
+  .glass {
+    background: hsl(var(--glass) / 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid hsl(var(--glass-border) / 0.15);
+  }
+
+  .glass-strong {
+    background: hsl(var(--glass) / 0.14);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(var(--glass-border) / 0.22);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 12px hsl(var(--card-mist) / 0.45);
+  }
+
+  /* 路径流动动画 */
+  @keyframes road-dash {
+    to { stroke-dashoffset: -40; }
+  }
+  .road-flow {
+    stroke-dasharray: 6 4;
+    animation: road-dash 2.4s linear infinite;
+  }
+
+  @keyframes node-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(var(--road-glow) / 0.6); }
+    50%      { box-shadow: 0 0 0 10px hsl(var(--road-glow) / 0); }
+  }
+  .node-pulse {
+    animation: node-pulse 2s ease-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--glass) / 0.05) 0%,
+      hsl(var(--glass) / 0.18) 50%,
+      hsl(var(--glass) / 0.05) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+}

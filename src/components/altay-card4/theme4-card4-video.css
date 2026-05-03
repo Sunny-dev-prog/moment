@@ -1,0 +1,97 @@
+.theme4-card4-video {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.theme4-card4-video.has-overlay {
+  overflow: visible;
+}
+
+.theme4-card4-video-surface {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
+  --theme4-continuous-corner-radius: 30.5px;
+  --theme4-continuous-corner-smoothing: 0.528;
+  --theme4-continuous-corner-handle: calc(var(--theme4-continuous-corner-radius) * var(--theme4-continuous-corner-smoothing));
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 20px 46px -28px rgba(44, 61, 74, 0.38),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.theme4-card4-fill-image {
+  transform: translateZ(0);
+  image-rendering: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.theme4-card4-overlay-svg {
+  overflow: visible;
+}
+
+.theme4-card4-stroke-svg {
+  overflow: visible;
+}
+
+.theme4-card4-surface-stroke {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  shape-rendering: geometricPrecision;
+}
+
+@keyframes altay-overlay-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes altay-hint-bounce {
+  0%, 100% {
+    transform: translateY(0);
+    box-shadow: 0 4px 16px -4px rgba(56,189,248,0.25), inset 0 0 0 1px rgba(56,189,248,0.2);
+  }
+  15% {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 24px -4px rgba(56,189,248,0.4), inset 0 0 0 1px rgba(56,189,248,0.35);
+  }
+  30% {
+    transform: translateY(0);
+    box-shadow: 0 4px 16px -4px rgba(56,189,248,0.25), inset 0 0 0 1px rgba(56,189,248,0.2);
+  }
+  42% {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px -4px rgba(56,189,248,0.35), inset 0 0 0 1px rgba(56,189,248,0.3);
+  }
+  54% {
+    transform: translateY(0);
+    box-shadow: 0 4px 16px -4px rgba(56,189,248,0.25), inset 0 0 0 1px rgba(56,189,248,0.2);
+  }
+}
+
+.altay-scroll-area {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.altay-scroll-area::-webkit-scrollbar {
+  width: 3px;
+}
+.altay-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.altay-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.altay-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

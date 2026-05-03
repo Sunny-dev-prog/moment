@@ -1,0 +1,28 @@
+.changbai-tuangou-carousel {
+  --tuangou-corner-radius-ios: 16px;
+  --tuangou-corner-radius-android: 14px;
+  --tuangou-corner-radius: var(--tuangou-corner-radius-ios);
+}
+
+@supports not (-webkit-touch-callout: none) {
+  .changbai-tuangou-carousel {
+    --tuangou-corner-radius: var(--tuangou-corner-radius-android);
+  }
+}
+
+.changbai-tuangou-media-shell {
+  border-radius: var(--tuangou-corner-radius);
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  clip-path: inset(0 round var(--tuangou-corner-radius));
+}
+
+.changbai-tuangou-media-image {
+  display: block;
+  border-radius: inherit;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

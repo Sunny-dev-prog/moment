@@ -1,0 +1,15 @@
+{
+  "name": "scenic-journeys-deepseek-proxy",
+  "version": "1.0.0",
+  "description": "DeepSeek API 代理云函数 - 保护 API Key 不暴露给前端",
+  "main": "index.js",
+  "runtime": "Nodejs16.13",
+  "timeout": 30,
+  "memorySize": 256,
+  "environment": {
+    "variables": {
+      "DEEPSEEK_API_URL": "https://api.deepseek.com/v1/chat/completions",
+      "DEEPSEEK_API_KEY": "sk-101637a3d49e4356861cff15d9cdce90"
+    }
+  }
+}
