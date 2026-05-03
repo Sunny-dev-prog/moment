@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { THEMES, ThemeData, PLACEHOLDER, getThemeCardCount, ThemeId } from "@/types/theme";
+import { getPublicAssetUrl } from "@/lib/publicAsset";
 import { loadThemes, getLocalJsonDataSource } from "@/lib/dataLoader";
 import { CardOne } from "@/components/CardOne";
 import { CardTwo } from "@/components/CardTwo";
@@ -174,7 +175,7 @@ const Index = () => {
       {!selectedId ? (
         <main
           className="relative flex flex-1 items-end justify-center overflow-hidden bg-cover bg-center bg-no-repeat px-5 pb-10 pt-6 sm:px-8 sm:pb-12"
-          style={{ backgroundImage: 'url("/homepage/dabeij.png")' }}
+          style={{ backgroundImage: `url("${getPublicAssetUrl("/homepage/dabeij.png")}")` }}
         >
           <style>{`
             @keyframes gold-btn-glow {

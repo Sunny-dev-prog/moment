@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { getPublicAssetUrl } from "@/lib/publicAsset";
 import {
   Menu,
   Search,
@@ -271,12 +272,12 @@ export function CardThree({ data, onUpdateCopywriting, totalCards = 3 }: Props) 
 
   // 6 个音乐板块 - 使用 /card3/ 目录下的资源
   const musicBlocks = [
-    { avatar: "/card3/avatar/1.jpg", audio: "/card3/bgm/1.mp3" },
-    { avatar: "/card3/avatar/2.jpg", audio: "/card3/bgm/2.mp3" },
-    { avatar: "/card3/avatar/3.jpg", audio: "/card3/bgm/3.mp3" },
-    { avatar: "/card3/avatar/4.jpg", audio: "/card3/bgm/4.mp3" },
-    { avatar: "/card3/avatar/5.jpg", audio: "/card3/bgm/5.mp3" },
-    { avatar: "/card3/avatar/6.jpg", audio: "/card3/bgm/6.mp3" },
+    { avatar: getPublicAssetUrl("/card3/avatar/1.jpg"), audio: getPublicAssetUrl("/card3/bgm/1.mp3") },
+    { avatar: getPublicAssetUrl("/card3/avatar/2.jpg"), audio: getPublicAssetUrl("/card3/bgm/2.mp3") },
+    { avatar: getPublicAssetUrl("/card3/avatar/3.jpg"), audio: getPublicAssetUrl("/card3/bgm/3.mp3") },
+    { avatar: getPublicAssetUrl("/card3/avatar/4.jpg"), audio: getPublicAssetUrl("/card3/bgm/4.mp3") },
+    { avatar: getPublicAssetUrl("/card3/avatar/5.jpg"), audio: getPublicAssetUrl("/card3/bgm/5.mp3") },
+    { avatar: getPublicAssetUrl("/card3/avatar/6.jpg"), audio: getPublicAssetUrl("/card3/bgm/6.mp3") },
   ];
 
   return (
