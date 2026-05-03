@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>双板滑雪动作演示</title>
+    <style>
+      :root {
+        /* 可在这里统一修改页面主色 */
+        --page-bg-top: #d5ebff;
+        --page-bg-bottom: #f7fbff;
+        --card-bg-top: rgba(255, 255, 255, 0.92);
+        --card-bg-bottom: rgba(230, 242, 255, 0.92);
+        --card-border: rgba(255, 255, 255, 0.78);
+        --title-color: #0f2746;
+        --button-text: #17314f;
+        --button-bg: rgba(255, 255, 255, 0.74);
+        --button-active-bg: linear-gradient(135deg, #34b5ff 0%, #1486ff 100%);
+        --button-active-text: #ffffff;
+        --shadow-color: rgba(31, 83, 150, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden;
+        overscroll-behavior: none;
+        background:
+          radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.75), transparent 36%),
+          linear-gradient(180deg, var(--page-bg-top) 0%, var(--page-bg-bottom) 100%);
+        font-family:
+          "PingFang SC",
+          "SF Pro Display",
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+      }
+
+      body {
+        position: fixed;
+        inset: 0;
+        touch-action: manipulation;
+      }
+
+      /* 整页严格锁在单屏内，适配 iPhone 安全区，绝不允许出现滚动条 */
+      .page-shell {
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh;
+        padding-top: max(12px, env(safe-area-inset-top));
+        padding-right: max(12px, env(safe-area-inset-right));
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding-left: max(12px, env(safe-area-inset-left));
+      }
+
+      /* 固定 10% / 15% / 75% 三段布局，不压缩，不超框 */
+      .page-grid {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-rows: minmax(0, 10fr) minmax(0, 15fr) minmax(0, 75fr);
+        overflow: hidden;
+      }
+
+      .title-zone,
+      .button-zone,
+      .stage-zone {
+        min-height: 0;
+        min-width: 0;
+      }
+
+      .title-zone {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+      }
+
+      /* 标题字号在不同 iPhone 屏幕下自适应，但始终单行显示 */
+      .main-title {
+        width: 100%;
+        margin: 0;
+        color: var(--title-color);
+        font-size: clamp(22px, 4.7vw, 32px);
+        font-weight: 800;
+        line-height: 1;
+        text-align: center;
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+      }
+
+      .button-zone {
+        display: flex;
+        align-items: center;
+        padding: 0 2px;
+      }
+
+      .button-row {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: clamp(8px, 2.2vw, 14px);
+        align-items: center;
+      }
+
+      /* 按钮文案、颜色、圆角、点击尺寸都在这里统一修改 */
+      .mode-button {
+        width: 100%;
+        min-height: 50px;
+        border: 1px solid rgba(255, 255, 255, 0.86);
+        border-radius: 16px;
+        background: var(--button-bg);
+        color: var(--button-text);
+        font-size: clamp(15px, 3.8vw, 18px);
+        font-weight: 700;
+        line-height: 1;
+        box-shadow: 0 12px 24px -18px var(--shadow-color);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition:
+          transform 140ms ease,
+          background 140ms ease,
+          color 140ms ease,
+          box-shadow 140ms ease;
+      }
+
+      .mode-button:active {
+        transform: scale(0.98);
+      }
+
+      .mode-button.is-active {
+        background: var(--button-active-bg);
+        color: var(--button-active-text);
+        box-shadow: 0 16px 30px -16px rgba(20, 134, 255, 0.44);
+      }
+
+      .stage-zone {
+        padding: 2px 0 0;
+        overflow: hidden;
+      }
+
+      /* 动画卡片严格占满 75% 区域，圆角和阴影都在这里改 */
+      .stage-card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: clamp(22px, 5vw, 32px);
+        border: 1px solid var(--card-border);
+        background:
+          radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.75), transparent 34%),
+          linear-gradient(180deg, var(--card-bg-top) 0%, var(--card-bg-bottom) 100%);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.72),
+          0 20px 40px -24px var(--shadow-color);
+      }
+
+      .canvas-host {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .canvas-host canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      @media (max-width: 375px) {
+        .page-shell {
+          padding-top: max(10px, env(safe-area-inset-top));
+          padding-right: max(10px, env(safe-area-inset-right));
+          padding-bottom: max(10px, env(safe-area-inset-bottom));
+          padding-left: max(10px, env(safe-area-inset-left));
+        }
+
+        .button-row {
+          gap: 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="page-grid">
+        <header class="title-zone">
+          <h1 class="main-title">来看一看炫酷的滑雪方式吧</h1>
+        </header>
+
+        <section class="button-zone" aria-label="动作选择区">
+          <div class="button-row">
+            <button class="mode-button is-active" type="button" data-mode="beginner" aria-pressed="true">入门滑</button>
+            <button class="mode-button" type="button" data-mode="brake" aria-pressed="false">刹停术</button>
+            <button class="mode-button" type="button" data-mode="carve" aria-pressed="false">刻滑弯</button>
+          </div>
+        </section>
+
+        <main class="stage-zone">
+          <section class="stage-card" aria-label="双板滑雪3D动画展示区">
+            <div id="canvas-host" class="canvas-host"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script type="module">
+      import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js";
+
+      const host = document.getElementById("canvas-host");
+      const buttons = Array.from(document.querySelectorAll(".mode-button"));
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      host.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.Fog(0xd9edff, 11, 23);
+
+      /* 锁死平视镜头：用户无法旋转、缩放，仅展示标准侧面动作 */
+      const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+      camera.position.set(0, 2.65, 8.6);
+      camera.lookAt(0, 1.35, 0);
+
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x8fb7e8, 1.5);
+      scene.add(hemiLight);
+
+      const sunLight = new THREE.DirectionalLight(0xffffff, 1.25);
+      sunLight.position.set(5, 8, 6);
+      scene.add(sunLight);
+
+      const fillLight = new THREE.DirectionalLight(0xcce4ff, 0.55);
+      fillLight.position.set(-6, 4, 5);
+      scene.add(fillLight);
+
+      const skySphere = new THREE.Mesh(
+        new THREE.SphereGeometry(26, 20, 20),
+        new THREE.MeshBasicMaterial({
+          color: 0xdff1ff,
+          side: THREE.BackSide,
+        })
+      );
+      scene.add(skySphere);
+
+      function createMountain(width, height, depth, color) {
+        const geometry = new THREE.ConeGeometry(width, height, 4);
+        const material = new THREE.MeshToonMaterial({ color });
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.rotation.z = Math.PI;
+        mesh.rotation.y = Math.PI * 0.25;
+        return mesh;
+      }
+
+      const mountainGroup = new THREE.Group();
+      const mountains = [
+        { x: -4.6, y: 1.5, z: -4.5, w: 3.2, h: 2.5, d: 4.2, c: 0xbad8f4 },
+        { x: -1.1, y: 1.7, z: -5.8, w: 4.4, h: 3.1, d: 5.2, c: 0xcfe4fa },
+        { x: 2.9, y: 1.55, z: -4.8, w: 3.8, h: 2.7, d: 4.6, c: 0xb4d3f1 },
+      ];
+      mountains.forEach((item) => {
+        const mountain = createMountain(item.w, item.h, item.d, item.c);
+        mountain.position.set(item.x, item.y, item.z);
+        mountainGroup.add(mountain);
+      });
+      scene.add(mountainGroup);
+
+      const slope = new THREE.Mesh(
+        new THREE.PlaneGeometry(32, 16, 1, 1),
+        new THREE.MeshToonMaterial({ color: 0xf6fbff })
+      );
+      slope.rotation.x = -Math.PI / 2;
+      slope.position.set(0, -0.02, 0);
+      scene.add(slope);
+
+      const snowTrackMaterial = new THREE.MeshBasicMaterial({
+        color: 0xcbe3fb,
+        transparent: true,
+        opacity: 0.3,
+      });
+
+      const snowTrackA = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 0.14), snowTrackMaterial);
+      snowTrackA.rotation.x = -Math.PI / 2;
+      snowTrackA.position.set(0, 0.02, 0.15);
+      scene.add(snowTrackA);
+
+      const snowTrackB = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 0.14), snowTrackMaterial);
+      snowTrackB.rotation.x = -Math.PI / 2;
+      snowTrackB.position.set(0, 0.02, -0.15);
+      scene.add(snowTrackB);
+
+      function makeMat(color) {
+        return new THREE.MeshToonMaterial({ color });
+      }
+
+      function createLimb(width, height, depth, color) {
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), makeMat(color));
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
+        return mesh;
+      }
+
+      /* 统一低多边形卡通滑雪人物：三种动作共用同一套人物与雪地场景 */
+      const skier = new THREE.Group();
+      const root = new THREE.Group();
+      skier.add(root);
+
+      const shadow = new THREE.Mesh(
+        new THREE.CircleGeometry(1.05, 20),
+        new THREE.MeshBasicMaterial({
+          color: 0x7aa8cf,
+          transparent: true,
+          opacity: 0.18,
+        })
+      );
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.position.y = 0.01;
+      skier.add(shadow);
+
+      const hip = new THREE.Group();
+      hip.position.set(0, 1.24, 0);
+      root.add(hip);
+
+      const torso = createLimb(0.6, 0.92, 0.36, 0x2e7dff);
+      torso.position.y = 0.46;
+      hip.add(torso);
+
+      const chest = createLimb(0.52, 0.42, 0.34, 0x4cb6ff);
+      chest.position.set(0, 0.78, 0);
+      hip.add(chest);
+
+      const neck = createLimb(0.14, 0.14, 0.14, 0xf7c7a7);
+      neck.position.set(0, 0.98, 0);
+      hip.add(neck);
+
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.34, 0.34), makeMat(0xf7c7a7));
+      head.position.set(0, 1.25, 0);
+      hip.add(head);
+
+      const helmet = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.18, 0.38), makeMat(0x1d3557));
+      helmet.position.set(0, 1.4, 0);
+      hip.add(helmet);
+
+      const goggles = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, 0.18), makeMat(0x88f0ff));
+      goggles.position.set(0, 1.24, 0.1);
+      hip.add(goggles);
+
+      const leftArm = new THREE.Group();
+      const rightArm = new THREE.Group();
+      leftArm.position.set(0.38, 0.84, 0);
+      rightArm.position.set(-0.38, 0.84, 0);
+      hip.add(leftArm, rightArm);
+
+      const leftUpperArm = createLimb(0.18, 0.48, 0.18, 0x38a1ff);
+      const rightUpperArm = createLimb(0.18, 0.48, 0.18, 0x38a1ff);
+      leftUpperArm.position.y = -0.2;
+      rightUpperArm.position.y = -0.2;
+      leftArm.add(leftUpperArm);
+      rightArm.add(rightUpperArm);
+
+      const leftHand = createLimb(0.16, 0.16, 0.16, 0xf7c7a7);
+      const rightHand = createLimb(0.16, 0.16, 0.16, 0xf7c7a7);
+      leftHand.position.y = -0.5;
+      rightHand.position.y = -0.5;
+      leftArm.add(leftHand);
+      rightArm.add(rightHand);
+
+      const leftPole = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.45, 6), makeMat(0x3e4c61));
+      const rightPole = leftPole.clone();
+      leftPole.position.set(0.14, -0.72, 0);
+      rightPole.position.set(-0.14, -0.72, 0);
+      leftArm.add(leftPole);
+      rightArm.add(rightPole);
+
+      const leftLeg = new THREE.Group();
+      const rightLeg = new THREE.Group();
+      leftLeg.position.set(0.18, 0.12, 0.12);
+      rightLeg.position.set(-0.18, 0.12, -0.12);
+      hip.add(leftLeg, rightLeg);
+
+      const leftThigh = createLimb(0.22, 0.56, 0.2, 0xff8d24);
+      const rightThigh = createLimb(0.22, 0.56, 0.2, 0xff8d24);
+      leftThigh.position.y = -0.28;
+      rightThigh.position.y = -0.28;
+      leftLeg.add(leftThigh);
+      rightLeg.add(rightThigh);
+
+      const leftCalf = createLimb(0.19, 0.5, 0.18, 0x283246);
+      const rightCalf = createLimb(0.19, 0.5, 0.18, 0x283246);
+      leftCalf.position.set(0, -0.72, 0);
+      rightCalf.position.set(0, -0.72, 0);
+      leftLeg.add(leftCalf);
+      rightLeg.add(rightCalf);
+
+      const leftBoot = createLimb(0.22, 0.18, 0.34, 0x202836);
+      const rightBoot = createLimb(0.22, 0.18, 0.34, 0x202836);
+      leftBoot.position.set(0, -1.02, 0.05);
+      rightBoot.position.set(0, -1.02, -0.05);
+      leftLeg.add(leftBoot);
+      rightLeg.add(rightBoot);
+
+      function createSki(color) {
+        const ski = new THREE.Mesh(
+          new THREE.BoxGeometry(2.15, 0.06, 0.12),
+          new THREE.MeshToonMaterial({ color })
+        );
+        return ski;
+      }
+
+      const leftSki = createSki(0xff3f6c);
+      const rightSki = createSki(0x2ec5ff);
+      leftSki.position.set(0.75, 0.05, 0.18);
+      rightSki.position.set(0.75, 0.05, -0.18);
+      skier.add(leftSki, rightSki);
+
+      /* 刹停术专用雪雾，只有刹车动作明显出现 */
+      const sprayGroup = new THREE.Group();
+      for (let i = 0; i < 14; i += 1) {
+        const puff = new THREE.Mesh(
+          new THREE.SphereGeometry(0.05 + (i % 3) * 0.02, 6, 6),
+          new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.0,
+          })
+        );
+        sprayGroup.add(puff);
+      }
+      skier.add(sprayGroup);
+
+      scene.add(skier);
+
+      let currentMode = "beginner";
+      let currentMix = 0;
+      const clock = new THREE.Clock();
+
+      function setActiveMode(mode) {
+        currentMode = mode;
+        buttons.forEach((button) => {
+          const active = button.dataset.mode === mode;
+          button.classList.toggle("is-active", active);
+          button.setAttribute("aria-pressed", String(active));
+        });
+      }
+
+      buttons.forEach((button) => {
+        button.addEventListener("click", () => {
+          setActiveMode(button.dataset.mode);
+        });
+      });
+
+      function resizeRenderer() {
+        const width = host.clientWidth;
+        const height = host.clientHeight;
+        if (!width || !height) return;
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+
+      const resizeObserver = new ResizeObserver(() => resizeRenderer());
+      resizeObserver.observe(host);
+      window.addEventListener("resize", resizeRenderer);
+      resizeRenderer();
+
+      function applyCommonPosture(time) {
+        const sway = Math.sin(time * 1.4) * 0.04;
+        head.rotation.z = sway * 0.35;
+        leftArm.rotation.z = 0.16 + sway;
+        rightArm.rotation.z = -0.16 - sway;
+        leftArm.rotation.x = -0.12;
+        rightArm.rotation.x = -0.12;
+      }
+
+      function animateBeginner(time) {
+        /* 动画速度修改位置：入门滑使用 0.15 倍时间速度，便于手机端慢动作观看 */
+        const loop = (time * 0.15) % 1;
+        const eased = loop;
+        const x = THREE.MathUtils.lerp(-2.6, 2.6, eased);
+        const bob = Math.sin(loop * Math.PI * 2) * 0.04;
+
+        skier.position.set(x, bob, 0);
+        hip.position.y = 1.24 + bob;
+        root.rotation.z = 0.04;
+        root.rotation.y = 0.0;
+        torso.rotation.z = 0.04;
+        torso.rotation.x = 0.3;
+        leftLeg.rotation.z = 0.1;
+        rightLeg.rotation.z = -0.1;
+        leftLeg.rotation.x = -0.24;
+        rightLeg.rotation.x = -0.24;
+        leftCalf.rotation.x = 0.38;
+        rightCalf.rotation.x = 0.38;
+        leftSki.rotation.y = 0.28;
+        rightSki.rotation.y = -0.28;
+        leftSki.rotation.z = 0.01;
+        rightSki.rotation.z = -0.01;
+        sprayGroup.visible = false;
+        shadow.scale.set(1.05, 0.82, 1);
+      }
+
+      function animateBrake(time) {
+        /* 动画速度修改位置：刹停术放慢到 0.12，完整展示从滑行到刹停 */
+        const loop = (time * 0.12) % 1;
+        const glide = loop < 0.65 ? loop / 0.65 : 1;
+        const decel = loop < 0.65 ? 0 : (loop - 0.65) / 0.35;
+        const x = THREE.MathUtils.lerp(-2.7, 1.2, glide) - THREE.MathUtils.smootherstep(0, 1, decel) * 0.3;
+        const sink = THREE.MathUtils.smootherstep(0, 1, decel) * 0.12;
+        const edge = 0.14 + THREE.MathUtils.smootherstep(0, 1, decel) * 0.22;
+
+        skier.position.set(x, 0, 0);
+        hip.position.y = 1.18 - sink;
+        root.rotation.z = -0.12 - edge * 0.35;
+        root.rotation.y = 0.0;
+        torso.rotation.z = -0.18;
+        torso.rotation.x = 0.22;
+        leftLeg.rotation.z = 0.26 + edge;
+        rightLeg.rotation.z = -0.26 - edge;
+        leftLeg.rotation.x = -0.35;
+        rightLeg.rotation.x = -0.35;
+        leftCalf.rotation.x = 0.56;
+        rightCalf.rotation.x = 0.56;
+        leftSki.rotation.y = 0.42;
+        rightSki.rotation.y = -0.42;
+        leftSki.rotation.z = 0.07;
+        rightSki.rotation.z = -0.07;
+        shadow.scale.set(1.18, 0.9, 1);
+
+        sprayGroup.visible = true;
+        sprayGroup.children.forEach((puff, index) => {
+          const burst = THREE.MathUtils.clamp((loop - 0.55) / 0.22, 0, 1);
+          puff.material.opacity = burst * (0.18 + (index % 3) * 0.04);
+          puff.position.set(
+            -0.4 - index * 0.02,
+            0.08 + (index % 4) * 0.05,
+            (index - 6.5) * 0.05
+          );
+          puff.scale.setScalar(0.65 + burst * (1 + (index % 2) * 0.2));
+        });
+      }
+
+      function animateCarve(time) {
+        /* 动画速度修改位置：刻滑弯使用 0.13，保证 S 型转弯足够顺滑 */
+        const loop = (time * 0.13) % 1;
+        const x = THREE.MathUtils.lerp(-2.75, 2.75, loop);
+        const carve = Math.sin(loop * Math.PI * 2);
+        const carveDepth = Math.sin(loop * Math.PI * 4) * 0.16;
+
+        skier.position.set(x, 0.02 * Math.sin(loop * Math.PI * 4), carveDepth);
+        hip.position.y = 1.22;
+        root.rotation.z = carve * -0.28;
+        root.rotation.y = carve * 0.08;
+        torso.rotation.z = carve * -0.22;
+        torso.rotation.x = 0.34;
+        leftLeg.rotation.z = 0.04 - carve * 0.08;
+        rightLeg.rotation.z = -0.04 - carve * 0.08;
+        leftLeg.rotation.x = -0.3;
+        rightLeg.rotation.x = -0.3;
+        leftCalf.rotation.x = 0.46;
+        rightCalf.rotation.x = 0.46;
+        leftSki.rotation.y = 0.04;
+        rightSki.rotation.y = 0.04;
+        leftSki.rotation.z = carve * -0.18;
+        rightSki.rotation.z = carve * -0.18;
+        sprayGroup.visible = false;
+        shadow.scale.set(1.0, 0.78, 1);
+      }
+
+      function updateAnimation(time) {
+        applyCommonPosture(time);
+
+        if (currentMode === "beginner") {
+          animateBeginner(time);
+          return;
+        }
+        if (currentMode === "brake") {
+          animateBrake(time);
+          return;
+        }
+        animateCarve(time);
+      }
+
+      function render() {
+        const elapsed = clock.getElapsedTime() + currentMix * 0.0001;
+        currentMix += 1;
+        updateAnimation(elapsed);
+        renderer.render(scene, camera);
+        window.requestAnimationFrame(render);
+      }
+
+      setActiveMode("beginner");
+      render();
+    </script>
+  </body>
+</html>

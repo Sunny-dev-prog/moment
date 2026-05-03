@@ -1,0 +1,102 @@
+{
+  "basePinkLogic": {
+    "rgb": [250, 233, 240],
+    "gradient": ["#fae9f0", "#efd9e3", "#d8c7d7"],
+    "accent": "#d2518b",
+    "dark": "#5d3147"
+  },
+  "goldReference": {
+    "range": ["#FFD700", "#FFA500"],
+    "ratio": 0.5
+  },
+  "timeSlots": [
+    {
+      "id": "dusk",
+      "label": "黄昏",
+      "kelvin": 4200,
+      "ambientOpacity": 0.56,
+      "contrastBoost": 0.92
+    },
+    {
+      "id": "night",
+      "label": "夜晚",
+      "kelvin": 3200,
+      "ambientOpacity": 0.74,
+      "contrastBoost": 1
+    },
+    {
+      "id": "midnight",
+      "label": "深夜",
+      "kelvin": 2700,
+      "ambientOpacity": 0.88,
+      "contrastBoost": 1.08
+    }
+  ],
+  "themes": [
+    {
+      "id": "warm-glow",
+      "name": "暖辉",
+      "baseRgb": [255, 139, 64],
+      "accentRgb": [255, 194, 92],
+      "goldCore": [255, 203, 54],
+      "backgroundGradient": ["#fde8ef", "#f3d8e0", "#e5d6dc"],
+      "goldGradient": ["#ffd700", "#ff9f1c"],
+      "beamColor": "#ffc54d",
+      "beamOpacity": 0.84,
+      "particleDensity": 46,
+      "starlightDensity": 32
+    },
+    {
+      "id": "flow-light",
+      "name": "流光",
+      "baseRgb": [255, 166, 75],
+      "accentRgb": [255, 233, 138],
+      "goldCore": [255, 212, 68],
+      "backgroundGradient": ["#fce7ee", "#efd8e2", "#ded1de"],
+      "goldGradient": ["#ffd84d", "#ffae32"],
+      "beamColor": "#ffb347",
+      "beamOpacity": 0.9,
+      "particleDensity": 52,
+      "starlightDensity": 28
+    },
+    {
+      "id": "deep-blue",
+      "name": "幽蓝",
+      "baseRgb": [56, 176, 255],
+      "accentRgb": [145, 241, 255],
+      "goldCore": [255, 206, 72],
+      "backgroundGradient": ["#f7e8ef", "#ecdbe7", "#d1d6e8"],
+      "goldGradient": ["#ffd54f", "#ffad33"],
+      "beamColor": "#64d6ff",
+      "beamOpacity": 0.7,
+      "particleDensity": 40,
+      "starlightDensity": 48
+    },
+    {
+      "id": "green-shadow",
+      "name": "翠影",
+      "baseRgb": [56, 205, 112],
+      "accentRgb": [166, 255, 112],
+      "goldCore": [255, 207, 66],
+      "backgroundGradient": ["#f8e8ee", "#eadde3", "#d4ddd7"],
+      "goldGradient": ["#ffd54a", "#ffaf36"],
+      "beamColor": "#9df06f",
+      "beamOpacity": 0.72,
+      "particleDensity": 44,
+      "starlightDensity": 26
+    },
+    {
+      "id": "fantasy-color",
+      "name": "幻彩",
+      "baseRgb": [43, 229, 202],
+      "accentRgb": [255, 96, 187],
+      "goldCore": [255, 208, 80],
+      "backgroundGradient": ["#f9e7ef", "#eadce6", "#d8d3e5"],
+      "goldGradient": ["#ffd95a", "#ffb236"],
+      "beamColor": "#ff64bb",
+      "beamOpacity": 0.78,
+      "particleDensity": 58,
+      "starlightDensity": 54
+    }
+  ]
+}
